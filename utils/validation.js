@@ -7,7 +7,11 @@ exports.signupValidation = [
   body("lastname", "Last name must not be empty").trim().isLength({ min: 1 }),
 ];
 
-exports.signupValidation = [
+exports.loginValidation = [
   body("username", "Username must not be empty").trim().isLength({ min: 1 }),
   body("password", "Password must not be empty").trim().isLength({ min: 1 }),
+];
+
+exports.messagePostValidation = [
+  body("message", "Message must not be empty").trim().isLength({ min: 1 }),
 ];

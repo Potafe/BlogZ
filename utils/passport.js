@@ -14,13 +14,16 @@ passport.use(
   new JwtStrategy(opts, async (jwt_payload, done) => {
     try {
       const user = await User.findById(jwt_payload.user._id);
+
       if (!user) {
         return done(null, false);
       }
-      const match = user.password === jwt_payload.user.passport;
+
+      const match = user.password === jwt_payload.user.password;
       if (!match) {
         return done(null, false);
       }
+
       return done(null, user);
     } catch (err) {
       return done(err, false);
@@ -28,4 +31,8 @@ passport.use(
   })
 );
 
-module.exports = passport;
+exports.passport = passport;
+exports.jwt_authenticate = (req, res, next) => {
+  passport.authenticate("jwt", { session: false });
+  next();
+};
