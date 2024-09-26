@@ -20,7 +20,9 @@ app.use(express.urlencoded({ extended: false }));
 
 // routes
 const authorRoute = require("./routes/authorRoute");
+const messageRouter = require("./routes/messageRoute");
 app.use("/auth", authorRoute);
+app.use("/message", messageRouter);
 
 // Error handlers
 app.use((req, res, next) => {
