@@ -15,3 +15,9 @@ exports.loginValidation = [
 exports.messagePostValidation = [
   body("message", "Message must not be empty").trim(),
 ];
+
+exports.userUpdateValidation = [
+  body("username", "Username must not be empty").trim().isLength({ min: 1 }),
+  body("firstname", "First name must not be empty").trim().isLength({ min: 1 }),
+  body("lastname", "Last name must not be empty").trim().isLength({ min: 1 }),
+];

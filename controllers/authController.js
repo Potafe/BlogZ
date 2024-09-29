@@ -95,5 +95,5 @@ exports.signupPost = asyncHandler(async (req, res) => {
 });
 
 exports.testRoute = async (req, res) => {
-  return res.json(new Response(true, result, "updated", null));
+  return res.json(new Response(true, null, "updated", null));
 };
