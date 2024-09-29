@@ -32,6 +32,7 @@ passport.use(
 );
 
 exports.passport = passport;
+
 exports.jwt_authenticate = (req, res, next) => {
   passport.authenticate("jwt", { session: false });
   next();

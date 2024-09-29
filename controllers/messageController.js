@@ -3,13 +3,17 @@ const Response = require("../models/response");
 const { validationResult } = require("express-validator");
 const User = require("../models/user");
 const Message = require("../models/message");
+const cloudinary = require("../utils/cloudinary");
+const fs = require("fs/promises");
 
 exports.messageGet = asyncHandler(async (req, res) => {
   const { senderID, receiverID } = req.params;
 
   const messages = await Message.find({
-    sender: senderID,
-    receiver: receiverID,
+    $or: [
+      { sender: senderID, receiver: receiverID },
+      { sender: receiverID, receiver: senderID },
+    ],
   })
     .sort({ dateSent: 1 })
     .exec();
@@ -20,6 +24,7 @@ exports.messageGet = asyncHandler(async (req, res) => {
 exports.messagePost = asyncHandler(async (req, res) => {
   const { senderID, receiverID } = req.params;
   const { message } = req.body;
+
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -33,16 +38,31 @@ exports.messagePost = asyncHandler(async (req, res) => {
     );
   }
 
+  let imgURL = "";
+  let imgPublicID = "";
+
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path);
+
+    imgURL = result.secure_url;
+    imgPublicID = result.public_id;
+
+    await fs.unlink(req.file.path);
+  }
+
   const newMessage = new Message({
     sender: senderID,
     receiver: receiverID,
     message: message,
+    image: {
+      url: imgURL,
+      publicID: imgPublicID,
+    },
   });
 
   await User.findByIdAndUpdate(senderID, {
     $addToSet: { friends: receiverID },
   }).exec();
-
   await User.findByIdAndUpdate(receiverID, {
     $addToSet: { friends: senderID },
   }).exec();
