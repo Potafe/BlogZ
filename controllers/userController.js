@@ -27,15 +27,15 @@ exports.userInfoGet = asyncHandler(async (req, res) => {
 
 exports.userUpdate = asyncHandler(async (req, res) => {
   const { userID } = req.params;
-  const { firstname, lastname, username } = req.body;
+  const { firstname, lastname, username, bio } = req.body;
 
   const user = await User.findById(userID);
   if (!user) {
     return res.json(new Response(false, null, "User not found", null));
   }
 
-  let profileURL = "";
-  let profilePublicID = "";
+  let profileURL = user.profile.url;
+  let profilePublicID = user.profile.publicID;
 
   if (req.file) {
     const result = await cloudinary.uploader.upload(req.file.path);
@@ -54,6 +54,7 @@ exports.userUpdate = asyncHandler(async (req, res) => {
     firstname: firstname,
     lastname: lastname,
     username: username,
+    bio: bio,
     profile: {
       url: profileURL,
       publicID: profilePublicID,
