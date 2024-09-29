@@ -71,3 +71,17 @@ exports.messagePost = asyncHandler(async (req, res) => {
 
   return res.json(new Response(true, newMessage, "Message sent", null));
 });
+
+exports.messageDelete = asyncHandler(async (req, res) => {
+  const { messageID } = req.params;
+  const message = await Message.findById(messageID);
+  if (!message) {
+    return res.json(new Response(false, null, "Message ID not found", null));
+  }
+  // if there is an existing id, delete that image from cloud storage
+  if (message.image.publicID.length > 0) {
+    await cloudinary.uploader.destroy(message.image.publicID);
+  }
+  const result = await Message.findByIdAndDelete(messageID);
+  return res.json(new Response(true, result, "Message deleted", null));
+});
