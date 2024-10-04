@@ -12,5 +12,11 @@ router.put(
   upload.single("profileImg"),
   userController.userUpdate
 );
+router.put(
+  "/:userID/cover",
+  passport.jwt_authenticate,
+  upload.single("coverPhoto"),
+  userController.userCoverUpdate
+);
 
 module.exports = router;

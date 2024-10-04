@@ -3,7 +3,7 @@ const Response = require("../models/response");
 const { validationResult } = require("express-validator");
 const User = require("../models/user");
 const Message = require("../models/message");
-const fs = require("fs/promises");
+const fs = require("fs");
 const cloudinary = require("../utils/cloudinary");
 
 exports.usersGet = asyncHandler(async (req, res) => {
@@ -66,4 +66,42 @@ exports.userUpdate = asyncHandler(async (req, res) => {
   }).exec();
 
   return res.json(new Response(true, updatedUser, "User updated", null));
+});
+
+exports.userCoverUpdate = asyncHandler(async (req, res) => {
+  const { userID } = req.params;
+
+  const user = await User.findById(userID);
+  if (!user) {
+    return res.json(new Response(false, null, "User not found", null));
+  }
+
+  let coverURL = user.cover.url;
+  let coverPublicID = user.cover.publicID;
+
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    coverURL = result.secure_url;
+    coverPublicID = result.public_id;
+
+    if (user.cover.publicID.length > 0) {
+      await cloudinary.uploader.destroy(user.cover.publicID);
+    }
+    await fs.unlink(req.file.path);
+  }
+
+  const update = {
+    cover: {
+      url: coverURL,
+      publicID: coverPublicID,
+    },
+  };
+
+  const updatedUser = await User.findByIdAndUpdate(userID, update, {
+    new: true,
+  }).exec();
+
+  return res.json(
+    new Response(true, updatedUser, "User cover photo updated", null)
+  );
 });
