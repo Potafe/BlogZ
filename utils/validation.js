@@ -21,3 +21,9 @@ exports.userUpdateValidation = [
   body("firstname", "First name must not be empty").trim().isLength({ min: 1 }),
   body("lastname", "Last name must not be empty").trim().isLength({ min: 1 }),
 ];
+
+exports.createGroupValidation = [
+  body("name", "Group name must be atleast 3 characters")
+    .trim()
+    .isLength({ min: 3 }),
+];
