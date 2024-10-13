@@ -21,3 +21,15 @@ exports.userUpdateValidation = [
   body("firstname", "First name must not be empty").trim().isLength({ min: 1 }),
   body("lastname", "Last name must not be empty").trim().isLength({ min: 1 }),
 ];
+
+exports.changePasswordValidation = [
+  body("oldPassword", "Password must be atleast 5 characters")
+    .trim()
+    .isLength({ min: 5 }),
+  body("newPassword", "Password must be atleast 5 characters")
+    .trim()
+    .isLength({ min: 5 }),
+  body("confirmNewPassword", "Password must be atleast 5 characters")
+    .trim()
+    .isLength({ min: 5 }),
+];
