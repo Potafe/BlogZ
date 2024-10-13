@@ -1,3 +1,4 @@
+require("dotenv").config();
 const asyncHandler = require("express-async-handler");
 const Response = require("../models/response");
 const { validationResult } = require("express-validator");
@@ -5,6 +6,7 @@ const User = require("../models/user");
 const Message = require("../models/message");
 const fs = require("fs");
 const cloudinary = require("../utils/cloudinary");
+const bcrypt = require("bcryptjs");
 
 exports.usersGet = asyncHandler(async (req, res) => {
   const users = await User.find().select("-password");
@@ -104,4 +106,40 @@ exports.userCoverUpdate = asyncHandler(async (req, res) => {
   return res.json(
     new Response(true, updatedUser, "User cover photo updated", null)
   );
+});
+
+exports.userPasswordUpdate = asyncHandler(async (req, res) => {
+  const { userID } = req.params;
+  const { oldPassword, newPassword, confirmNewPassword } = req.body;
+  const user = await User.findById(userID);
+  if (!user) {
+    return res.json(new Response(false, null, "User not found", null));
+  }
+  const match = await bcrypt.compare(oldPassword, user.password);
+  if (!match) {
+    return res.json(
+      new Response(false, null, "Old password is incorrect", "oldPassword")
+    );
+  }
+  if (newPassword !== confirmNewPassword) {
+    return res.json(
+      new Response(false, null, "Passwords do not match", "confirmNewPassword")
+    );
+  }
+  const hashedPassword = await bcrypt.hash(
+    newPassword,
+    parseInt(process.env.BCRYPT_SALT)
+  );
+  if (!hashedPassword) {
+    return res.json(
+      new Response(false, null, "Error in password encryption", null)
+    );
+  }
+  const update = {
+    password: hashedPassword,
+  };
+  const result = await User.findByIdAndUpdate(userID, update, {
+    new: true,
+  }).exec();
+  return res.json(new Response(true, result, "Password updated", null));
 });
