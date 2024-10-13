@@ -47,3 +47,66 @@ exports.groupPost = asyncHandler(async (req, res) => {
   await group.save();
   return res.json(new Response(true, group, "Group created", null));
 });
+
+exports.groupChatsGet = asyncHandler(async (req, res) => {
+  const { groupID } = req.params;
+  const messages = await Message.find({ group: groupID })
+    .populate({
+      path: "sender",
+      select: "-password",
+    })
+    .exec();
+  return res.json(
+    new Response(true, messages, "Group messages retrieved", null)
+  );
+});
+
+exports.groupChatPost = asyncHandler(async (req, res) => {
+  const { senderID, groupID } = req.params;
+  const { message } = req.body;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.json(
+      new Response(
+        false,
+        null,
+        "Error in message validation",
+        errors.array()[0].msg
+      )
+    );
+  }
+  let imgURL = "";
+  let imgPublicID = "";
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    imgURL = result.secure_url;
+    imgPublicID = result.public_id;
+    await fs.unlink(req.file.path);
+  }
+  const newMessage = new Message({
+    sender: senderID,
+    group: groupID,
+    message: message,
+    image: {
+      url: imgURL,
+      publicID: imgPublicID,
+    },
+  });
+  await newMessage.save();
+  return res.json(new Response(true, newMessage, "Message sent to goup", null));
+});
+
+exports.groupInfoGet = asyncHandler(async (req, res) => {
+  const { groupID } = req.params;
+  const group = await Group.findById(groupID)
+    .populate({
+      path: "members",
+      select: "-password",
+    })
+    .populate({
+      path: "admins",
+      select: "-password",
+    })
+    .exec();
+  return res.json(new Response(true, group, "Message info retrieved", null));
+});

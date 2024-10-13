@@ -19,4 +19,24 @@ router.get(
   groupController.userGroupsGet
 );
 
+router.get(
+  "/:groupID/chats",
+  passport.jwt_authenticate,
+  groupController.groupChatsGet
+);
+
+router.post(
+  "/chats/:senderID/:groupID",
+  passport.jwt_authenticate,
+  upload.single("image"),
+  validation.messagePostValidation,
+  groupController.groupChatPost
+);
+
+router.get(
+  "/:groupID/info",
+  passport.jwt_authenticate,
+  groupController.groupInfoGet
+);
+
 module.exports = router;
