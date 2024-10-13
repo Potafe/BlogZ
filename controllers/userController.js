@@ -28,84 +28,129 @@ exports.userInfoGet = asyncHandler(async (req, res) => {
 });
 
 exports.userUpdate = asyncHandler(async (req, res) => {
-  const { userID } = req.params;
-  const { firstname, lastname, username, bio } = req.body;
+  try {
+    const { userID } = req.params;
+    const { firstname, lastname, username, bio } = req.body;
 
-  const user = await User.findById(userID);
-  if (!user) {
-    return res.json(new Response(false, null, "User not found", null));
-  }
-
-  let profileURL = user.profile.url;
-  let profilePublicID = user.profile.publicID;
-
-  if (req.file) {
-    const result = await cloudinary.uploader.upload(req.file.path);
-
-    profileURL = result.secure_url;
-    profilePublicID = result.public_id;
-
-    if (user.profile.publicID.length > 0) {
-      await cloudinary.uploader.destroy(user.profile.publicID);
+    // Check if user exists
+    const user = await User.findById(userID);
+    if (!user) {
+      return res.json(new Response(false, null, "User not found", null));
     }
 
-    await fs.unlink(req.file.path);
+    // Handle profile image upload to Cloudinary
+    let profileURL = user.profile.url;
+    let profilePublicID = user.profile.publicID;
+
+    if (req.file) {
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path);
+        profileURL = result.secure_url;
+        profilePublicID = result.public_id;
+
+        // Delete old profile image if exists
+        if (user.profile.publicID && user.profile.publicID.length > 0) {
+          await cloudinary.uploader.destroy(user.profile.publicID);
+        }
+
+        // Delete file from the local filesystem
+        await fs.promises.unlink(req.file.path);
+      } catch (error) {
+        return res
+          .status(500)
+          .json(
+            new Response(false, null, "Error in file upload", error.message)
+          );
+      }
+    }
+
+    // Prepare user data for update
+    const update = {
+      firstname,
+      lastname,
+      username,
+      bio,
+      profile: {
+        url: profileURL,
+        publicID: profilePublicID,
+      },
+    };
+
+    // Update user in the database
+    const updatedUser = await User.findByIdAndUpdate(userID, update, {
+      new: true,
+    }).exec();
+
+    return res.json(new Response(true, updatedUser, "User updated", null));
+  } catch (error) {
+    console.error("Error updating user: ", error);
+    return res
+      .status(500)
+      .json(new Response(false, null, "Internal Server Error", error.message));
   }
-
-  const update = {
-    firstname: firstname,
-    lastname: lastname,
-    username: username,
-    bio: bio,
-    profile: {
-      url: profileURL,
-      publicID: profilePublicID,
-    },
-  };
-
-  const updatedUser = await User.findByIdAndUpdate(userID, update, {
-    new: true,
-  }).exec();
-
-  return res.json(new Response(true, updatedUser, "User updated", null));
 });
 
 exports.userCoverUpdate = asyncHandler(async (req, res) => {
-  const { userID } = req.params;
+  try {
+    const { userID } = req.params;
 
-  const user = await User.findById(userID);
-  if (!user) {
-    return res.json(new Response(false, null, "User not found", null));
-  }
-
-  let coverURL = user.cover.url;
-  let coverPublicID = user.cover.publicID;
-
-  if (req.file) {
-    const result = await cloudinary.uploader.upload(req.file.path);
-    coverURL = result.secure_url;
-    coverPublicID = result.public_id;
-
-    if (user.cover.publicID.length > 0) {
-      await cloudinary.uploader.destroy(user.cover.publicID);
+    const user = await User.findById(userID);
+    if (!user) {
+      return res.json(new Response(false, null, "User not found", null));
     }
-    await fs.unlink(req.file.path);
+
+    let coverURL = user.cover.url;
+    let coverPublicID = user.cover.publicID;
+
+    if (req.file) {
+      try {
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path);
+        coverURL = result.secure_url;
+        coverPublicID = result.public_id;
+
+        // If previous cover image exists, delete it
+        if (user.cover.publicID && user.cover.publicID.length > 0) {
+          await cloudinary.uploader.destroy(user.cover.publicID);
+        }
+
+        // Delete the file from the local filesystem
+        await fs.promises.unlink(req.file.path);
+      } catch (error) {
+        return res
+          .status(500)
+          .json(
+            new Response(
+              false,
+              null,
+              "Error uploading cover photo",
+              error.message
+            )
+          );
+      }
+    }
+
+    // Update the cover photo in the database
+    const update = {
+      cover: {
+        url: coverURL,
+        publicID: coverPublicID,
+      },
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(userID, update, {
+      new: true,
+    }).exec();
+
+    return res.json(
+      new Response(true, updatedUser, "User cover photo updated", null)
+    );
+  } catch (error) {
+    console.error("Error updating cover photo:", error);
+    return res
+      .status(500)
+      .json(new Response(false, null, "Internal Server Error", error.message));
   }
-
-  const update = {
-    cover: {
-      url: coverURL,
-      publicID: coverPublicID,
-    },
-  };
-
-  const updatedUser = await User.findByIdAndUpdate(userID, update, {
-    new: true,
-  }).exec();
-
-  return res.json(
-    new Response(true, updatedUser, "User cover photo updated", null)
-  );
 });
 
 exports.userPasswordUpdate = asyncHandler(async (req, res) => {
