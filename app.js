@@ -22,12 +22,11 @@ app.use(express.urlencoded({ extended: false }));
 const authorRoute = require("./routes/authorRoute");
 const messageRouter = require("./routes/messageRoute");
 const userRouter = require("./routes/userRoute");
-const groupRouter = require("./routes/groupRoute.js");
+const groupRouter = require("./routes/groupRoute");
 app.use("/auth", authorRoute);
 app.use("/message", messageRouter);
 app.use("/user", userRouter);
 app.use("/group", groupRouter);
-
 // Error handlers
 app.use((req, res, next) => {
   const error = new Error("Not Found");

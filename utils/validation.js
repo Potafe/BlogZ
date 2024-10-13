@@ -27,3 +27,15 @@ exports.createGroupValidation = [
     .trim()
     .isLength({ min: 3 }),
 ];
+
+exports.changePasswordValidation = [
+  body("oldPassword", "Password must be atleast 5 characters")
+    .trim()
+    .isLength({ min: 5 }),
+  body("newPassword", "Password must be atleast 5 characters")
+    .trim()
+    .isLength({ min: 5 }),
+  body("confirmNewPassword", "Password must be atleast 5 characters")
+    .trim()
+    .isLength({ min: 5 }),
+];

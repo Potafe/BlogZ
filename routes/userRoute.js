@@ -8,12 +8,6 @@ const validation = require("../utils/validation");
 router.get("/", passport.jwt_authenticate, userController.usersGet);
 router.get("/:userID", passport.jwt_authenticate, userController.userInfoGet);
 router.put(
-  "/:userID",
-  passport.jwt_authenticate,
-  upload.single("profileImg"),
-  userController.userUpdate
-);
-router.put(
   "/:userID/cover",
   passport.jwt_authenticate,
   upload.single("coverPhoto"),
@@ -24,5 +18,11 @@ router.put(
   passport.jwt_authenticate,
   validation.changePasswordValidation,
   userController.userPasswordUpdate
+);
+router.put(
+  "/:userID",
+  passport.jwt_authenticate,
+  upload.single("profileImg"),
+  userController.userUpdate
 );
 module.exports = router;
