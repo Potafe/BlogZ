@@ -15,7 +15,7 @@ router.post(
 
 router.get(
   "/:userID",
-  passport.authenticate("jwt", { session: false }),
+  passport.jwt_authenticate,
   groupController.userGroupsGet
 );
 
